@@ -106,23 +106,4 @@ public class ToasterParser {
     private boolean isAtEnd() {
         return current >= tokens.size();
     }
-
-    public static void main(String[] args) {
-        String input = """
-        bake app
-        spread: butter
-        pack {
-            version = "1.0.0"
-            author = "Arlo"
-        }
-        """;
-
-        ToasterLexer lexer = new ToasterLexer(input);
-        ToasterParser parser = new ToasterParser(lexer.tokenize());
-
-        List<ASTNode> ast = parser.parse();
-        for (ASTNode node : ast) {
-            System.out.println(node);
-        }
-    }
 }
