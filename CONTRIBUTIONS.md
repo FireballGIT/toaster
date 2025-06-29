@@ -1,6 +1,6 @@
 # Contributing to BAG Studios
 
-Welcome, 3Bagger-in-training! Whether you're squashing bugs, making spicy plugins, or spreading butter in Toaster — you're officially helping us **taste the future**
+Welcome! Whether you're squashing bugs, making spicy plugins, or spreading butter in Toaster — you're officially helping us **taste the future**
 
 ## 🛠️ What Can I Contribute?
 
