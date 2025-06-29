@@ -139,24 +139,3 @@ public class ToasterLexer {
     private void addToken(String type, String value) {
         tokens.add(new Token(type, value, line));
     }
-
-    public static void main(String[] args) {
-        String code = """
-        bake app
-        spread: jam
-        pack {
-            version = "1.0.0"
-        }
-
-        # Add some butter
-        /#/ start
-        * we're toasting now
-        ###
-        """;
-
-        ToasterLexer lexer = new ToasterLexer(code);
-        for (Token token : lexer.tokenize()) {
-            System.out.println(token);
-        }
-    }
-}
