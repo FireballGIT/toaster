@@ -17,5 +17,5 @@ Welcome, 3Bagger-in-training! Whether you're squashing bugs, making spicy plugin
 1. **Fork** this repo  
 2. **Clone** it down:  
    ```bash
-   git clone https://github.com/your-username/bagel-project.git
+   git clone https://github.com/FireballGIT/toaster
    cd bagel-project
