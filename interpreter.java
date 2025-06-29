@@ -1,6 +1,6 @@
-// ToasterInterpreter.java
-// BAG Studios' Gradle-style build tool: Toaster
+// File: Toaster.java
 
+import java.io.*;
 import java.util.*;
 
 // Token class
@@ -13,7 +13,6 @@ class Token {
         this.value = value;
     }
 
-    @Override
     public String toString() {
         return type + ":" + value;
     }
@@ -31,7 +30,7 @@ class ToasterLexer {
     }
 }
 
-// AST Base
+// AST Node
 abstract class ASTNode {
     public abstract void accept(Visitor visitor) throws Exception;
 }
@@ -45,7 +44,6 @@ class TaskNode extends ASTNode {
         this.args = args;
     }
 
-    @Override
     public void accept(Visitor visitor) throws Exception {
         visitor.visitTaskNode(this);
     }
@@ -56,7 +54,7 @@ interface Visitor {
     void visitTaskNode(TaskNode node) throws Exception;
 }
 
-// Parser with syntax error handling
+// Parser
 class ToasterParser {
     private final List<Token> tokens;
     private int current = 0;
@@ -99,8 +97,8 @@ class ToasterParser {
 }
 
 class ParseException extends Exception {
-    public ParseException(String message) {
-        super(message);
+    public ParseException(String msg) {
+        super(msg);
     }
 }
 
@@ -118,29 +116,37 @@ class PluginManager {
     }
 
     public void runBeforeExecution() {
-        for (ToasterPlugin plugin : plugins) plugin.onBeforeExecution();
+        for (ToasterPlugin p : plugins) p.onBeforeExecution();
     }
 
     public void runAfterExecution() {
-        for (ToasterPlugin plugin : plugins) plugin.onAfterExecution();
+        for (ToasterPlugin p : plugins) p.onAfterExecution();
+    }
+}
+
+// Context class
+class ToasterContext {
+    private final PluginManager pluginManager = new PluginManager();
+
+    public PluginManager getPluginManager() {
+        return pluginManager;
     }
 }
 
 // Interpreter
 class ToasterInterpreter implements Visitor {
-    private final PluginManager pluginManager = new PluginManager();
+    private final ToasterContext context;
 
-    public void registerPlugin(ToasterPlugin plugin) {
-        pluginManager.register(plugin);
+    public ToasterInterpreter(ToasterContext context) {
+        this.context = context;
     }
 
     public void execute(ASTNode ast) throws Exception {
-        pluginManager.runBeforeExecution();
+        context.getPluginManager().runBeforeExecution();
         ast.accept(this);
-        pluginManager.runAfterExecution();
+        context.getPluginManager().runAfterExecution();
     }
 
-    @Override
     public void visitTaskNode(TaskNode node) throws Exception {
         switch (node.taskName.toLowerCase()) {
             case "bake": bake(node.args); break;
@@ -168,23 +174,47 @@ class ToasterInterpreter implements Visitor {
     }
 }
 
-// Runner
-public class ToasterRunner {
+// Main
+public class Toaster {
     public static void main(String[] args) {
-        String input = "bake app butter";
-        ToasterLexer lexer = new ToasterLexer();
-        ToasterParser parser;
-        ToasterInterpreter interpreter = new ToasterInterpreter();
+        if (args.length == 0) {
+            System.out.println("Usage: java Toaster <file.toast>");
+            return;
+        }
 
+        String fileName = args[0];
+        StringBuilder source = new StringBuilder();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                source.append(line).append(" ");
+            }
+        } catch (IOException e) {
+            System.out.println("Failed to read .toast file: " + e.getMessage());
+            return;
+        }
+
+        ToasterLexer lexer = new ToasterLexer();
+        List<Token> tokens = lexer.tokenize(source.toString());
+
+        ToasterParser parser = new ToasterParser(tokens);
+        ASTNode ast;
         try {
-            List<Token> tokens = lexer.tokenize(input);
-            parser = new ToasterParser(tokens);
-            ASTNode tree = parser.parse();
-            interpreter.execute(tree);
-        } catch (ParseException pe) {
-            System.err.println("[Syntax Error] " + pe.getMessage());
+            ast = parser.parse();
+        } catch (ParseException e) {
+            System.out.println("Parse error: " + e.getMessage());
+            return;
+        }
+
+        ToasterContext context = new ToasterContext();
+        context.getPluginManager().register(new ExamplePlugin());
+
+        ToasterInterpreter interpreter = new ToasterInterpreter(context);
+        try {
+            interpreter.execute(ast);
         } catch (Exception e) {
-            System.err.println("[Execution Error] " + e.getMessage());
+            System.out.println("Runtime error: " + e.getMessage());
         }
     }
 }
